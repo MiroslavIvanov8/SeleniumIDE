@@ -24,14 +24,11 @@ pipeline {
             '''
             }
         }
-        stage('Set up .NET Core') {
-			steps {
-                bat '''
-                echo Installing .NET SDK 6.0
-                choco install dotnet-sdk -y --version=6.0.100
-                '''
-			}
-	    }
+        stage('Install .NET SDK with Chocolatey') {
+            steps {
+            bat 'C:\\ProgramData\\chocolatey\\bin\\choco install dotnet-sdk -y --version=6.0.100'
+    }
+}
         stage('Uninstal Current Chrome') {
 			steps {
                 bat '''
