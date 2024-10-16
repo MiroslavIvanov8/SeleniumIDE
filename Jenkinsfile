@@ -10,7 +10,7 @@ pipeline {
 	stages {
 		stage('Checkout the code') {
 			steps {
-			 git branch: 'main', url: 'https://github.com/MiroslavIvanov8/SeleniumIDE'
+			 git branch: 'master', url: 'https://github.com/MiroslavIvanov8/SeleniumIDE'
 		     }
 	    }
         stage('Set up .NET Core') {
