@@ -1,50 +1,58 @@
 pipeline {
 	agent any
 
-    environment{
+    environment {
         CHROME_VERSION = '127.0.6533.73'
         CHROMEDRIVER_VERSION = '127.0.6533.73'
         CHROME_INSTALL_PATH = 'C:\\Program Files (x86)\\Google\\Chrome\\Application'
         CHROMEDRIVER_PATH = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chromedriver.exe'
     }
+    
 	stages {
 		stage('Checkout the code') {
 			steps {
-			 git branch: 'master', url: 'https://github.com/MiroslavIvanov8/SeleniumIDE'
-		     }
+			    git branch: 'master', url: 'https://github.com/MiroslavIvanov8/SeleniumIDE'
+		    }
 	    }
-        stage('Download Choco') {
-            steps {
-                bat '''@echo off
-            :: Enable TLS 1.2 for downloading Chocolatey
-            powershell -Command "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; iex ((New-Object System.Net.WebClient).DownloadString(\'https://community.chocolatey.org/install.ps1\'))"
 
-            :: Check if Chocolatey was installed correctly
-            choco --version
-            '''
+        stage('Download and Install Choco') {
+            steps {
+                bat '''
+                @echo off
+                :: Enable TLS 1.2 and download Chocolatey
+                powershell -Command "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; iex ((New-Object System.Net.WebClient).DownloadString(\'https://community.chocolatey.org/install.ps1\'))"
+
+                :: Ensure Chocolatey is installed and check its version
+                set "PATH=%PATH%;C:\\ProgramData\\chocolatey\\bin"
+                choco --version
+                '''
             }
         }
+
         stage('Install .NET SDK with Chocolatey') {
             steps {
-            bat 'C:\\ProgramData\\chocolatey\\bin\\choco install dotnet-sdk -y --version=6.0.100'
-    }
-}
-        stage('Uninstal Current Chrome') {
-			steps {
+                bat 'choco install dotnet-sdk -y --version=6.0.100'
+            }
+        }
+
+        stage('Uninstall Current Chrome') {
+            steps {
                 bat '''
                 echo Uninstalling current Google Chrome
                 choco uninstall googlechrome -y  
                 '''
-			}
-	    }
+            }
+        }
+
         stage('Install specific version of Chrome') {
-			steps {
+            steps {
                 bat '''
                 echo Installing Google Chrome version %CHROME_VERSION%
                 choco install googlechrome --version=%CHROME_VERSION% -y --allow-downgrade --ignore-checksums
                 '''
-			}
-	    }
+            }
+        }
+
         stage('Download and Install ChromeDriver') {
             steps {
                 bat '''
@@ -55,21 +63,23 @@ pipeline {
                 '''
             }
         }
+
         stage('Restore dependencies') {
-			steps {
+            steps {
                 bat 'dotnet restore SeleniumIde.sln'
-			}
-	    }
+            }
+        }
+
         stage('Build') {
-			steps {
-                bat 'dotnet build SeleniumIde.sln -- configuration Release'
-			}
-	    }
+            steps {
+                bat 'dotnet build SeleniumIde.sln --configuration Release'
+            }
+        }
+
         stage('Execute Tests') {
-			steps {
+            steps {
                 bat 'dotnet test SeleniumIde.sln --logger "trx;LogFileName=TestResult.trx"'
-			}
-	    }
-		
+            }
+        }
     }
 }
