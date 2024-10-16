@@ -13,6 +13,17 @@ pipeline {
 			 git branch: 'master', url: 'https://github.com/MiroslavIvanov8/SeleniumIDE'
 		     }
 	    }
+        stage('Download Choco') {
+            steps {
+                bat '''@echo off
+            :: Enable TLS 1.2 for downloading Chocolatey
+            powershell -Command "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; iex ((New-Object System.Net.WebClient).DownloadString(\'https://community.chocolatey.org/install.ps1\'))"
+
+            :: Check if Chocolatey was installed correctly
+            choco --version
+            '''
+            }
+        }
         stage('Set up .NET Core') {
 			steps {
                 bat '''
